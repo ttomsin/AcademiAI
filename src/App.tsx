@@ -13,6 +13,8 @@ import { Tasks } from './pages/Tasks';
 import { Notifications } from './pages/Notifications';
 import { Profile } from './pages/Profile';
 import { Courses } from './pages/Courses';
+import { CourseDetails } from './pages/CourseDetails';
+import { Schedule } from './pages/Schedule';
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -38,8 +40,10 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
+        <Route path="schedule" element={<Schedule />} />
         <Route path="tasks" element={<Tasks />} />
         <Route path="courses" element={<Courses />} />
+        <Route path="courses/:id" element={<CourseDetails />} />
         <Route path="notifications" element={<Notifications />} />
         <Route path="profile" element={<Profile />} />
       </Route>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Home, Calendar, LayoutList, User, Bell, BookOpen } from 'lucide-react';
+import { Home, Calendar, LayoutList, User, Bell, BookOpen, Clock } from 'lucide-react';
 import { useAppStore } from '../store/AppProvider';
 
 export function Layout() {
@@ -23,6 +23,7 @@ export function Layout() {
         
         <nav className="flex-1 px-4 space-y-2 mt-4">
           <NavItem to="/" icon={<Home className="w-5 h-5" />} label="Dashboard" />
+          <NavItem to="/schedule" icon={<Clock className="w-5 h-5" />} label="Schedule" />
           <NavItem to="/courses" icon={<BookOpen className="w-5 h-5" />} label="Courses" />
           <NavItem to="/tasks" icon={<LayoutList className="w-5 h-5" />} label="Tasks" />
           <NavItem to="/notifications" icon={<Bell className="w-5 h-5" />} label="Notifications" badge={unreadCount} />
@@ -46,8 +47,9 @@ export function Layout() {
       </main>
 
       {/* Bottom Nav for Mobile */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 h-16 flex justify-around items-center px-4 z-50 pb-safe">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 h-16 flex justify-around items-center px-4 z-50 pb-safe overflow-x-auto">
         <MobileNavItem to="/" icon={<Home className="w-5 h-5 rounded-md" />} label="Home" />
+        <MobileNavItem to="/schedule" icon={<Clock className="w-5 h-5 rounded-md" />} label="Schedule" />
         <MobileNavItem to="/courses" icon={<BookOpen className="w-5 h-5 rounded-md" />} label="Courses" />
         <MobileNavItem to="/tasks" icon={<LayoutList className="w-5 h-5 rounded-md" />} label="Tasks" />
         <MobileNavItem to="/notifications" icon={<Bell className="w-5 h-5 rounded-md" />} label="Alerts" badge={unreadCount} />

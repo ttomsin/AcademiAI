@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/AppProvider';
-import { BookOpen, Plus, Book, Trash2 } from 'lucide-react';
+import { BookOpen, Plus, Book, Trash2, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function Courses() {
   const { courses, addCourse, removeCourse } = useAppStore();
@@ -92,21 +93,30 @@ export function Courses() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {courses.map((course) => (
-              <div key={course.id} className="bg-white border border-slate-100 shadow-sm rounded-xl p-4 flex gap-4 transition-all hover:shadow-md items-center">
-                <div className="w-12 h-12 bg-indigo-50 rounded-xl border border-indigo-100 flex items-center justify-center shrink-0 text-indigo-600">
-                  <BookOpen className="w-6 h-6" />
+              <div key={course.id} className="bg-white border border-slate-100 shadow-sm rounded-xl flex items-stretch transition-all hover:shadow-md relative overflow-hidden group">
+                <Link to={`/courses/${course.id}`} className="flex-1 p-4 flex items-center gap-4 hover:bg-slate-50/50 transition-colors">
+                  <div className="w-12 h-12 bg-indigo-50 rounded-xl border border-indigo-100 flex items-center justify-center shrink-0 text-indigo-600 group-hover:scale-105 transition-transform duration-300">
+                    <BookOpen className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1 min-w-0 pr-4">
+                    <h4 className="font-black text-slate-900 truncate tracking-tight">{course.code}</h4>
+                    <p className="text-xs text-slate-500 font-medium truncate mt-0.5">{course.name}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-slate-300 -ml-2 group-hover:text-indigo-500 transition-colors" />
+                </Link>
+                <div className="border-l border-slate-100 flex items-center justify-center bg-slate-50 group-hover:bg-rose-50 transition-colors w-12 shrink-0 z-10">
+                   <button 
+                     onClick={(e) => {
+                       e.preventDefault();
+                       e.stopPropagation();
+                       removeCourse(course.id);
+                     }}
+                     className="w-full h-full flex items-center justify-center text-slate-300 group-hover:text-rose-500 transition-colors"
+                     title="Remove Course"
+                   >
+                     <Trash2 className="w-4 h-4" />
+                   </button>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-black text-slate-900 truncate tracking-tight">{course.code}</h4>
-                  <p className="text-xs text-slate-500 font-medium truncate mt-0.5">{course.name}</p>
-                </div>
-                <button 
-                  onClick={() => removeCourse(course.id)}
-                  className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors rounded-lg"
-                  title="Remove Course"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </div>
             ))}
           </div>
