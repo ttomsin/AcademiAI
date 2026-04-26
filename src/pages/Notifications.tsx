@@ -8,18 +8,24 @@ import { NotificationType } from '../types';
 function getIconForType(type: NotificationType) {
   switch (type) {
     case 'reminder': return <Clock className="w-5 h-5 text-blue-500" />;
-    case 'warning': return <AlertTriangle className="w-5 h-5 text-red-500" />;
-    case 'motivation': return <Info className="w-5 h-5 text-indigo-500" />;
-    case 'reward': return <Trophy className="w-5 h-5 text-yellow-500" />;
+    case 'deadline_warning': return <AlertTriangle className="w-5 h-5 text-orange-500" />;
+    case 'missed': return <AlertTriangle className="w-5 h-5 text-red-500" />;
+    case 'rescheduled': return <Clock className="w-5 h-5 text-slate-500" />;
+    case 'achievement': return <Trophy className="w-5 h-5 text-yellow-500" />;
+    case 'streak': return <Trophy className="w-5 h-5 text-indigo-500" />;
+    default: return <Info className="w-5 h-5 text-slate-500" />;
   }
 }
 
 function getBgForType(type: NotificationType) {
   switch (type) {
     case 'reminder': return 'bg-blue-50 border-blue-100';
-    case 'warning': return 'bg-red-50 border-red-100';
-    case 'motivation': return 'bg-indigo-50 border-indigo-100';
-    case 'reward': return 'bg-yellow-50 border-yellow-100';
+    case 'deadline_warning': return 'bg-orange-50 border-orange-100';
+    case 'missed': return 'bg-red-50 border-red-100';
+    case 'rescheduled': return 'bg-slate-50 border-slate-100';
+    case 'achievement': return 'bg-yellow-50 border-yellow-100';
+    case 'streak': return 'bg-indigo-50 border-indigo-100';
+    default: return 'bg-slate-50 border-slate-100';
   }
 }
 

@@ -1,4 +1,4 @@
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 export function getAuthToken(): string | null {
   return localStorage.getItem('access_token');
@@ -55,9 +55,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   // Auth
-  login: (data: any) => request<any>('/login', { method: 'POST', body: JSON.stringify(data) }),
-  register: (data: any) => request<any>('/register', { method: 'POST', body: JSON.stringify(data) }),
-  getMe: () => request<any>('/me', { method: 'GET' }),
+  login: (data: any) => request<any>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+  register: (data: any) => request<any>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+  getMe: () => request<any>('/auth/me', { method: 'GET' }),
   
   // Courses
   getCourses: () => request<any[]>('/courses', { method: 'GET' }),

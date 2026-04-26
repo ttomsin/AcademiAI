@@ -86,7 +86,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const signup = async (name: string, email: string, password: string, major: string) => {
     try {
-      const res = await api.register({ name, email, password, major });
+      const res = await api.register({ name, email, password });
       if (res.access_token) {
         setAuthToken(res.access_token);
         await fetchInitialData();
