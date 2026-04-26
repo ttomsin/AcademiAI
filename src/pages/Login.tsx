@@ -9,19 +9,30 @@ export function Login() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   
-  const [name, setName] = useState('Alex Student');
-  const [email, setEmail] = useState('alex@university.edu');
-  const [password, setPassword] = useState('password123');
-  const [major, setMajor] = useState('Computer Science');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [major, setMajor] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLogin) {
-      login(email, password);
-    } else {
-      signup(name, email, password, major);
+    setError('');
+    setIsLoading(true);
+    try {
+      if (isLogin) {
+        await login(email, password);
+      } else {
+        await signup(name, email, password, major);
+      }
+      navigate('/');
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during authentication');
+    } finally {
+      setIsLoading(false);
     }
-    navigate('/');
   };
 
   return (
@@ -61,6 +72,11 @@ export function Login() {
           </div>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold p-3 rounded-xl mb-4 text-center">
+                {error}
+              </div>
+            )}
             {!isLogin && (
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
@@ -143,14 +159,12 @@ export function Login() {
 
             <button
               type="submit"
-              className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mt-6"
+              disabled={isLoading}
+              className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLogin ? 'Sign In to Start' : 'Create Account'}
+              {isLoading ? 'Please wait...' : (isLogin ? 'Sign In to Start' : 'Create Account')}
             </button>
             
-            <p className="text-[10px] font-bold uppercase text-center text-slate-400 mt-4 tracking-wider">
-              {isLogin ? "Mock prototype: Any email/password will work" : "Mock prototype: Feel free to use fake data"}
-            </p>
           </form>
         </div>
       </div>

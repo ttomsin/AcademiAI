@@ -141,8 +141,8 @@ export function Profile() {
           <RankIcon className={cn("w-10 h-10", currentRankInfo.color)} />
         </div>
         
-        <h3 className={cn("text-2xl font-black mb-0", currentRankInfo.textAccent)}>{user.name}</h3>
-        <p className={cn("text-xs font-bold uppercase tracking-widest mb-3 opacity-60", currentRankInfo.textAccent)}>@{user.username} • {user.major}</p>
+        <h3 className={cn("text-2xl font-black mb-0", currentRankInfo.textAccent)}>{user.name || 'User'}</h3>
+        <p className={cn("text-xs font-bold uppercase tracking-widest mb-3 opacity-60", currentRankInfo.textAccent)}>@{user.username || 'user'} {user.major ? `• ${user.major}` : ''}</p>
 
         <span className={cn("uppercase tracking-widest text-[10px] font-bold px-3 py-1 rounded-full bg-white/80 mb-5 shadow-sm", currentRankInfo.color)}>
           {user.rank}
@@ -151,17 +151,17 @@ export function Profile() {
         {nextRankInfo ? (
           <div className="w-full max-w-xs mt-2 relative z-10">
             <div className={cn("flex justify-between text-[10px] font-bold uppercase mb-2", currentRankInfo.textAccent)}>
-              <span>{user.points} XP</span>
+              <span>{user?.points || 0} XP</span>
               <span className="opacity-60">{nextRankInfo.threshold} XP</span>
             </div>
             <div className="w-full bg-white/50 rounded-full h-2 shadow-inner overflow-hidden border border-white/40">
                <div 
                   className={cn("h-2 rounded-full transition-all duration-1000", currentRankInfo.border.replace('border-', 'bg-'))} 
-                  style={{ width: `${Math.min(100, Math.max(0, ((user.points - currentRankInfo.threshold) / (nextRankInfo.threshold - currentRankInfo.threshold)) * 100))}%` }}
+                  style={{ width: `${Math.min(100, Math.max(0, (((user?.points || 0) - currentRankInfo.threshold) / (nextRankInfo.threshold - currentRankInfo.threshold)) * 100))}%` }}
                 ></div>
             </div>
             <p className={cn("text-[10px] mt-2 font-bold uppercase", currentRankInfo.textAccent)}>
-              <span className="opacity-70">{nextRankInfo.threshold - user.points} points to {nextRankInfo.name}</span>
+              <span className="opacity-70">{nextRankInfo.threshold - (user?.points || 0)} points to {nextRankInfo.name}</span>
             </p>
           </div>
         ) : (
@@ -176,7 +176,7 @@ export function Profile() {
         <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Progression Path</h3>
         <div className="space-y-3">
           {RANKS.map((rank, idx) => {
-            const isUnlocked = user.points >= rank.threshold;
+            const isUnlocked = (user?.points || 0) >= rank.threshold;
             const isCurrent = user.rank === rank.name;
             const Icon = rank.icon;
             

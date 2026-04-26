@@ -5,7 +5,7 @@ import { useAppStore } from '../store/AppProvider';
 
 export function Layout() {
   const { notifications } = useAppStore();
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-100 pb-16 lg:pb-0 lg:pl-64 text-slate-900">

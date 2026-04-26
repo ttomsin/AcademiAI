@@ -22,11 +22,11 @@ export function Dashboard() {
 
   const pendingTasks = tasks.filter(t => t.status === 'pending');
   
-  // Tasks to do today based on 'scheduledFor'
-  const todayTasks = pendingTasks.filter(t => isToday(parseISO(t.scheduledFor)));
+  // Tasks to do today based on 'scheduled_start'
+  const todayTasks = pendingTasks.filter(t => t.scheduled_start && isToday(parseISO(t.scheduled_start)));
   
   // Next upcoming tasks that aren't today
-  const upcomingTasks = pendingTasks.filter(t => !isToday(parseISO(t.scheduledFor))).slice(0, 3);
+  const upcomingTasks = pendingTasks.filter(t => t.scheduled_start && !isToday(parseISO(t.scheduled_start))).slice(0, 3);
   
   const featuredTask = todayTasks[0];
 
@@ -38,11 +38,11 @@ export function Dashboard() {
       <div className="flex items-center justify-between pb-2">
         <div className="flex items-center space-x-3">
           <div className={cn("w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold uppercase shrink-0", currentRankInfo.bg, currentRankInfo.color.split(' ')[0], currentRankInfo.border)}>
-            {user.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+             {(user?.name || 'A').split(' ').map(n => n[0]).join('').substring(0, 2)}
           </div>
           <div>
             <h2 className="text-sm font-bold text-slate-900 leading-tight">{user.name}</h2>
-            <p className={cn("text-[9px] uppercase tracking-widest font-black", currentRankInfo.color.split(' ')[0])}>{user.rank} • {user.major}</p>
+            <p className={cn("text-[9px] uppercase tracking-widest font-black", currentRankInfo.color.split(' ')[0])}>{user.rank} {user.major ? `• ${user.major}` : ''}</p>
           </div>
         </div>
         <div className="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-[10px] font-black uppercase flex items-center gap-1 shrink-0">
@@ -58,7 +58,7 @@ export function Dashboard() {
             <span className="text-[10px] opacity-80 shrink-0">Active Now</span>
           </div>
           <h3 className="text-lg font-bold leading-tight">{featuredTask.title}</h3>
-          <p className="text-xs text-indigo-100 mt-1 opacity-90">AI recommends finishing your {featuredTask.course} work today to maintain your evening free-time.</p>
+          <p className="text-xs text-indigo-100 mt-1 opacity-90">AI recommends finishing your {featuredTask.course?.code || 'task'} work today to maintain your evening free-time.</p>
           <button 
             onClick={() => completeTask(featuredTask.id)}
             className="mt-4 w-full bg-white text-indigo-600 font-bold py-2.5 rounded-xl text-xs hover:bg-slate-50 transition-colors"
@@ -80,7 +80,7 @@ export function Dashboard() {
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
           <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Points</p>
-          <p className="text-xl font-black text-indigo-600">{user.points}</p>
+          <p className="text-xl font-black text-indigo-600">{user?.points || 0}</p>
           <p className="text-[9px] text-emerald-600 font-medium mt-1">Keep it up!</p>
         </div>
         <div className={cn("border p-4 rounded-2xl relative overflow-hidden", currentRankInfo.bg, currentRankInfo.border)}>
@@ -90,7 +90,7 @@ export function Dashboard() {
           <p className={cn("text-[10px] font-bold uppercase mb-1 opacity-70", currentRankInfo.textAccent)}>Rank</p>
           <p className={cn("text-xl font-black", currentRankInfo.textAccent)}>{user.rank}</p>
           <div className={cn("w-full h-1 rounded-full mt-2 overflow-hidden border border-white/40", currentRankInfo.border.replace('border-', 'bg-').replace('200', '300'))}>
-            <div className={cn("h-1 rounded-full transition-all duration-1000", currentRankInfo.color.replace('text-', 'bg-').split(' ')[0])} style={{ width: `${Math.min(100, (user.points % 100))}%` }}></div>
+            <div className={cn("h-1 rounded-full transition-all duration-1000", currentRankInfo.color.replace('text-', 'bg-').split(' ')[0])} style={{ width: `${Math.min(100, ((user?.points || 0) % 100))}%` }}></div>
           </div>
         </div>
       </div>
@@ -105,7 +105,7 @@ export function Dashboard() {
                  <div className={`w-2 h-8 rounded-full mr-3 shrink-0 ${i === 0 ? 'bg-amber-400' : 'bg-slate-200'}`}></div>
                  <div className="flex-1 min-w-0">
                    <p className="text-xs font-bold text-slate-900 truncate">{task.title}</p>
-                   <p className="text-[10px] text-slate-400 truncate">Scheduled: {format(parseISO(task.scheduledFor), 'EE, MMM do')}</p>
+                   <p className="text-[10px] text-slate-400 truncate">Scheduled: {task.scheduled_start ? format(parseISO(task.scheduled_start), 'EE, MMM do') : 'Not scheduled'}</p>
                  </div>
                  <div className="text-right shrink-0">
                     <p className="text-[10px] font-bold text-slate-800">+20 XP</p>

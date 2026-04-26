@@ -11,7 +11,10 @@ export function Tasks() {
   const [deadline, setDeadline] = useState('');
   const [estimatedMinutes, setEstimatedMinutes] = useState('60');
 
-  const pendingTasks = tasks.filter(t => t.status === 'pending').sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime());
+  const pendingTasks = tasks.filter(t => t.status === 'pending').sort((a, b) => {
+    if (!a.scheduled_start || !b.scheduled_start) return 0;
+    return new Date(a.scheduled_start).getTime() - new Date(b.scheduled_start).getTime()
+  });
   const completedTasks = tasks.filter(t => t.status === 'completed');
 
   const handleAddTask = (e: React.FormEvent) => {
@@ -21,11 +24,16 @@ export function Tasks() {
     // Add time component to deadline if it's just a date
     const finalDeadline = deadline.includes('T') ? new Date(deadline).toISOString() : new Date(`${deadline}T23:59:59`).toISOString();
     
+    // Convert course ID back from select (it's the string value representing the selected option right now)
+    const courseObj = courses.find(c => c.code === course);
+    
     addTask({
       title,
-      course,
+      course_id: courseObj?.id || 0,
+      course: courseObj || null,
       deadline: finalDeadline,
-      estimatedMinutes: parseInt(estimatedMinutes) || 60,
+      estimated_duration_mins: parseInt(estimatedMinutes) || 60,
+      type: 'assignment'
     });
     
     setTitle('');
@@ -153,7 +161,7 @@ export function Tasks() {
           <div className="space-y-3">
             {pendingTasks.map((task) => (
               <div key={task.id} className="bg-white border border-slate-100 shadow-sm rounded-xl p-3 flex gap-4 transition-all hover:shadow-md group">
-                 <button 
+                  <button 
                   onClick={() => completeTask(task.id)}
                   className="mt-1 shrink-0 text-slate-200 group-hover:text-indigo-400 hover:!text-indigo-600 transition-colors focus:outline-none"
                 >
@@ -163,10 +171,10 @@ export function Tasks() {
                   <h4 className="font-bold text-xs text-slate-900 truncate">{task.title}</h4>
                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
                     <span className="text-[10px] text-slate-500 font-bold uppercase">
-                      {task.course}
+                      {task.course?.code || 'General'}
                     </span>
                     <span className="text-[9px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-[4px] font-bold inline-flex items-center gap-1">
-                      DO: {format(parseISO(task.scheduledFor), 'MMM d')}
+                      DO: {task.scheduled_start ? format(parseISO(task.scheduled_start), 'MMM d') : 'TBD'}
                     </span>
                     <span className="text-[9px] text-red-500 bg-red-50 px-1.5 py-0.5 rounded-[4px] font-bold inline-flex items-center gap-1">
                       DUE: {format(parseISO(task.deadline), 'MMM d')}
@@ -192,7 +200,7 @@ export function Tasks() {
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-slate-600 truncate text-xs line-through decoration-slate-300">{task.title}</h4>
                 </div>
-                <span className="text-[10px] uppercase font-bold text-slate-400">{task.course}</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400">{task.course?.code || 'General'}</span>
               </div>
             ))}
           </div>

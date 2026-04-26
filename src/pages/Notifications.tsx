@@ -45,14 +45,14 @@ export function Notifications() {
           {notifications.map((notif) => (
              <div 
               key={notif.id} 
-              onClick={() => !notif.read && markNotificationRead(notif.id)}
+              onClick={() => !notif.is_read && markNotificationRead(notif.id)}
               className={cn(
                 "py-4 flex gap-4 transition-all relative border-b border-slate-100",
-                !notif.read && "cursor-pointer bg-slate-50/30",
-                notif.read && "opacity-60"
+                !notif.is_read && "cursor-pointer bg-slate-50/30",
+                notif.is_read && "opacity-60"
               )}
             >
-              {!notif.read && (
+              {!notif.is_read && (
                 <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-8 bg-indigo-500 rounded-r-md" />
               )}
               
@@ -61,11 +61,11 @@ export function Notifications() {
               </div>
               
               <div className="flex-1 pr-2">
-                <p className={cn("text-sm text-slate-800 leading-snug font-medium", !notif.read && "font-bold text-slate-900")}>
+                <p className={cn("text-sm text-slate-800 leading-snug font-medium", !notif.is_read && "font-bold text-slate-900")}>
                   {notif.message}
                 </p>
                 <div className="mt-1.5 font-bold uppercase text-[9px] text-slate-400 tracking-wider">
-                  {formatDistanceToNow(parseISO(notif.timestamp), { addSuffix: true })}
+                  {formatDistanceToNow(parseISO(notif.created_at), { addSuffix: true })}
                 </div>
               </div>
             </div>

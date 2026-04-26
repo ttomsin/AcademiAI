@@ -1,22 +1,24 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Task, AppNotification, Rank, Course } from '../types';
 import { addDays, subDays, isBefore, isAfter, format, parseISO } from 'date-fns';
+import { api, setAuthToken, clearAuthToken, getAuthToken } from '../lib/api';
 
 interface AppState {
   user: User | null;
   tasks: Task[];
   notifications: AppNotification[];
   courses: Course[];
-  login: (email: string, password?: string) => void;
-  signup: (name: string, email: string, password: string, major: string) => void;
+  isLoading: boolean;
+  login: (email: string, password?: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, major: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => void;
-  addTask: (task: Omit<Task, 'id' | 'status' | 'scheduledFor'>) => void;
-  completeTask: (id: string) => void;
-  markNotificationRead: (id: string) => void;
+  addTask: (task: Omit<Task, 'id' | 'status' | 'scheduled_start'>) => Promise<void>;
+  completeTask: (id: number) => Promise<void>;
+  markNotificationRead: (id: number) => Promise<void>;
   getRankFromPoints: (points: number) => Rank;
-  addCourse: (course: Omit<Course, 'id'>) => void;
-  removeCourse: (id: string) => void;
+  addCourse: (course: Omit<Course, 'id'>) => Promise<void>;
+  removeCourse: (id: number) => Promise<void>;
 }
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -26,6 +28,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchInitialData = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+      const [u, tObj, nObj, c] = await Promise.all([
+        api.getMe(),
+        api.getTasks(),
+        api.getNotifications(),
+        api.getCourses()
+      ]);
+      setUser({ ...u, rank: u.level });
+      setTasks(Array.isArray(tObj) ? tObj : tObj?.data || []);
+      setNotifications(Array.isArray(nObj) ? nObj : nObj?.data || []);
+      setCourses(c || []);
+    } catch (e) {
+      console.error('Failed fetching data:', e);
+      clearAuthToken();
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
 
   // Calculate Rank based on Points
   const getRankFromPoints = (points: number): Rank => {
@@ -38,105 +71,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return 'Bronze';
   };
 
-  const seedMockData = (name: string, email: string, major: string) => {
-    const today = new Date();
-    setUser({
-      id: 'mock-user-1',
-      name,
-      username: email.split('@')[0],
-      email,
-      major,
-      points: 150,
-      streak: 3,
-      rank: 'Silver',
-    });
-
-    setCourses([
-      { id: 'c1', code: 'CSC 452', name: 'Artificial Intelligence' },
-      { id: 'c2', code: 'MTH 301', name: 'Linear Algebra' },
-      { id: 'c3', code: 'BIO 101', name: 'Intro to Biology' }
-    ]);
-
-    setTasks([
-      {
-        id: '1',
-        title: 'Read chapter 4 & 5',
-        course: 'BIO 101',
-        deadline: addDays(today, 2).toISOString(),
-        scheduledFor: today.toISOString(),
-        status: 'pending',
-        estimatedMinutes: 60,
-      },
-      {
-        id: '2',
-        title: 'Write Essay Outline',
-        course: 'CSC 452',
-        deadline: addDays(today, 5).toISOString(),
-        scheduledFor: addDays(today, 1).toISOString(),
-        status: 'pending',
-        estimatedMinutes: 45,
-      },
-      {
-        id: '3',
-        title: 'Math Problem Set 3',
-        course: 'MTH 301',
-        deadline: subDays(today, 1).toISOString(),
-        scheduledFor: subDays(today, 2).toISOString(),
-        status: 'missed',
-        estimatedMinutes: 90,
+  const login = async (email: string, password?: string) => {
+    try {
+      const res = await api.login({ email, password: password || 'password' });
+      if (res.access_token) {
+        setAuthToken(res.access_token);
+        await fetchInitialData();
       }
-    ]);
-
-    setNotifications([
-      {
-        id: 'n1',
-        message: 'You missed Math Problem Set 3, it has been rescheduled for tomorrow.',
-        type: 'warning',
-        timestamp: today.toISOString(),
-        read: false,
-      },
-      {
-        id: 'n2',
-        message: 'You have a 3-day streak! Keep it up.',
-        type: 'motivation',
-        timestamp: subDays(today, 1).toISOString(),
-        read: true,
-      }
-    ]);
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   };
 
-  const login = (email: string, password?: string) => {
-    // In a real app we would verify login, here we just hydrate mock data
-    seedMockData('Alex Rivera', email, 'Computer Science');
-  };
-
-  const signup = (name: string, email: string, password: string, major: string) => {
-    // In a real app we'd create the user, here we hydrate empty/starter state
-    const today = new Date();
-    setUser({
-      id: 'mock-user-new',
-      name,
-      username: email.split('@')[0],
-      email,
-      major,
-      points: 0,
-      streak: 0,
-      rank: 'Bronze',
-    });
-    setCourses([]);
-    setTasks([]);
-    setNotifications([
-      {
-        id: 'n1',
-        message: `Welcome to AcademiAI, ${name.split(' ')[0]}! Add your first course to get started.`,
-        type: 'motivation',
-        timestamp: today.toISOString(),
-        read: false,
+  const signup = async (name: string, email: string, password: string, major: string) => {
+    try {
+      const res = await api.register({ name, email, password });
+      if (res.access_token) {
+        setAuthToken(res.access_token);
+        await fetchInitialData();
       }
-    ]);
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   };
 
   const logout = () => {
+    clearAuthToken();
     setUser(null);
     setTasks([]);
     setNotifications([]);
@@ -145,88 +107,106 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = (data: Partial<User>) => {
     if (user) {
-      setUser({ ...user, ...data });
-      addNotification({
-        message: 'Profile updated successfully!',
-        type: 'reward'
-      });
+      setUser({ ...user, ...data }); // Assuming backend doesn't have an update endpoint yet
+      /* addNotification({
+        message: 'Profile updated locally!',
+        type: 'achievement'
+      }); */
     }
   };
 
-  const addCourse = (courseInput: Omit<Course, 'id'>) => {
-    const newCourse = {
-      ...courseInput,
-      id: Math.random().toString(36).substr(2, 9),
-    };
-    setCourses(prev => [...prev, newCourse]);
-  };
-
-  const removeCourse = (id: string) => {
-    setCourses(prev => prev.filter(c => c.id !== id));
-  };
-
-  const addTask = (taskInput: Omit<Task, 'id' | 'status' | 'scheduledFor'>) => {
-    // Simulate AI scheduling logic
-    const now = new Date();
-    const deadlineDate = parseISO(taskInput.deadline);
-    let scheduledDate = addDays(now, 1);
-    
-    if (isAfter(deadlineDate, now)) {
-      const diffTime = Math.abs(deadlineDate.getTime() - now.getTime());
-      scheduledDate = new Date(now.getTime() + diffTime / 2);
+  const addCourse = async (courseInput: Omit<Course, 'id'>) => {
+    try {
+      const newCourse = await api.createCourse(courseInput);
+      setCourses(prev => [...prev, newCourse]);
+    } catch (e) {
+      console.error(e);
+      throw e;
     }
-    
-    const newTask: Task = {
-      ...taskInput,
-      id: Math.random().toString(36).substr(2, 9),
-      status: 'pending',
-      scheduledFor: scheduledDate.toISOString(),
-    };
-    
-    setTasks(prev => [...prev, newTask]);
-
-    addNotification({
-      message: `I scheduled "${taskInput.title}" for ${format(scheduledDate, 'EEEE, MMM do')}.`,
-      type: 'motivation',
-    });
   };
 
-  const completeTask = (id: string) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, status: 'completed' } : t));
-    
-    if (user) {
-      const newPoints = user.points + 20;
-      setUser({
-        ...user,
-        points: newPoints,
-        rank: getRankFromPoints(newPoints),
-        streak: user.streak + 1
+  const removeCourse = async (id: number) => {
+    try {
+      await api.deleteCourse(id);
+      setCourses(prev => prev.filter(c => c.id !== id));
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  };
+
+  const addTask = async (taskInput: Omit<Task, 'id' | 'status' | 'scheduled_start'>) => {
+    try {
+      const res = await api.createTask({
+        title: taskInput.title,
+        course_id: taskInput.course_id,
+        deadline: taskInput.deadline,
+        estimated_duration_mins: taskInput.estimated_duration_mins,
+        type: taskInput.type || 'assignment',
       });
+      // Refresh tasks
+      const newTasks = await api.getTasks();
+      setTasks(Array.isArray(newTasks) ? newTasks : newTasks?.data || []);
       
-      addNotification({
-        message: `Nice! You earned 20 points. You now have a ${user.streak + 1}-day streak!`,
-        type: 'reward'
-      });
+      const scheduledDateStr = res?.scheduled_start;
+      if (scheduledDateStr) {
+         addNotification({
+          message: `I scheduled "${taskInput.title}" for ${format(parseISO(scheduledDateStr), 'EEEE, MMM do')}.`,
+          type: 'achievement' as any,
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      throw e;
     }
   };
 
-  const addNotification = (n: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => {
+  const completeTask = async (id: number) => {
+    try {
+       await api.completeTask(id);
+       
+       const [tObj, gamification] = await Promise.all([
+          api.getTasks(),
+          api.getGamificationProfile()
+       ]);
+       
+       setTasks(Array.isArray(tObj) ? tObj : tObj?.data || []);
+       
+       if (user && gamification) {
+         setUser({
+           ...user,
+           points: gamification.points,
+           rank: gamification.level,
+           streak: gamification.streak
+         });
+       }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const addNotification = (n: Omit<AppNotification, 'id' | 'created_at' | 'is_read'>) => {
     const newNotif: AppNotification = {
       ...n,
-      id: Math.random().toString(36).substr(2, 9),
-      timestamp: new Date().toISOString(),
-      read: false,
+      id: Math.floor(Math.random() * 10000),
+      created_at: new Date().toISOString(),
+      is_read: false,
     };
     setNotifications(prev => [newNotif, ...prev]);
   };
 
-  const markNotificationRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const markNotificationRead = async (id: number) => {
+    try {
+       await api.readNotification(id);
+       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch (e) {
+       console.error(e);
+    }
   };
 
   return (
     <AppContext.Provider value={{ 
-      user, tasks, notifications, courses, 
+      user, tasks, notifications, courses, isLoading,
       login, signup, logout, updateProfile,
       addTask, completeTask, markNotificationRead, getRankFromPoints,
       addCourse, removeCourse

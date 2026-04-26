@@ -1,41 +1,45 @@
 export type Rank = 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond' | 'Master' | 'Grandmaster';
 
 export interface User {
-  id: string;
+  id: number;
   name: string;
-  username: string; // Added username
+  username: string; // Keep for UI if needed
   email: string;
-  major: string; // Course of study
+  major: string; // Keep for UI if needed
   points: number;
   streak: number;
-  rank: Rank;
+  rank: Rank; // Handled as 'level' on backend
 }
 
 export interface Course {
-  id: string;
+  id: number;
   code: string;
   name: string;
 }
 
-export type TaskStatus = 'pending' | 'completed' | 'missed';
+export type TaskStatus = 'pending' | 'scheduled' | 'in_progress' | 'completed' | 'missed' | 'rescheduled';
+export type TaskType = 'assignment' | 'exam' | 'quiz' | 'project' | 'study' | 'reading';
 
 export interface Task {
-  id: string;
+  id: number;
   title: string;
-  course: string; // Will store course code
+  course_id: number;
+  course: Course | null;
   deadline: string; // ISO string
-  scheduledFor: string; // ISO string
+  scheduled_start?: string; // ISO string
   status: TaskStatus;
-  estimatedMinutes: number;
+  type: TaskType;
+  estimated_duration_mins: number;
 }
 
-export type NotificationType = 'reminder' | 'warning' | 'motivation' | 'reward';
+export type NotificationType = 'reminder' | 'deadline_warning' | 'missed' | 'rescheduled' | 'achievement' | 'streak';
 
 export interface AppNotification {
-  id: string;
+  id: number;
   message: string;
   type: NotificationType;
-  timestamp: string; // ISO string
-  read: boolean;
+  created_at: string; // ISO string
+  is_read: boolean;
 }
+
 
